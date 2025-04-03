@@ -1,0 +1,44 @@
+sudo apt-get update
+sudo apt-get install pi-bluetooth
+sudo apt-get install bluez python3-bluez
+pip3 install bluepy
+
+
+
+from bluepy.btle import Peripheral, UUID
+import time
+
+# Imposta l'UUID del servizio e della caratteristica BLE che vuoi monitorare
+SERVICE_UUID = UUID("180C")  # UUID del servizio
+CHARACTERISTIC_UUID = UUID("2A56")  # UUID della caratteristica
+
+# Indirizzo MAC del tuo Arduino R4
+DEVICE_ADDRESS = "XX:XX:XX:XX:XX:XX"  # Sostituisci con l'indirizzo del tuo Arduino
+
+# Connetti al dispositivo BLE (Arduino)
+print("Connessione al dispositivo BLE...")
+device = Peripheral(DEVICE_ADDRESS)
+
+# Accedi al servizio BLE e alla caratteristica
+service = device.getServiceByUUID(SERVICE_UUID)
+characteristic = service.getCharacteristics(CHARACTERISTIC_UUID)[0]
+
+# Ciclo per ricevere i messaggi
+try:
+    while True:
+        # Leggi la caratteristica per ottenere il messaggio
+        message = characteristic.read()
+        print("Messaggio ricevuto: ", message.decode('utf-8'))
+        time.sleep(1)  # Puoi regolare la frequenza di lettura
+except KeyboardInterrupt:
+    print("Disconnessione e terminazione programma")
+finally:
+    device.disconnect()
+    
+    
+    
+    MAC :  dc:54:75:c4:ce:a5
+    
+    
+    
+    https://youtu.be/l-K_0N1m5kQ?feature=shared
