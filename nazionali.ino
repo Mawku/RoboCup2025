@@ -1,104 +1,115 @@
 #include <Pixy2.h>
+#define IN1 9
+#define IN2 8
+#define ENA 10
+#define IN3 7
+#define IN4 6
+#define ENB 5
+
 Pixy2 pixy;
 
-int signature = 0;
-
-//pin di controllo dei motori
-#define ENA 5
-#define ENB 8
-#define IN1 6
-#define IN2 7
-#define IN3 10
-#define IN4 9
-#define carSpeed 200
-#define carSpeed2 200
-int rightDistance = 0, leftDistance = 0;
-
-void forward(){ 
-  analogWrite(ENA, carSpeed);
-  analogWrite(ENB, carSpeed);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-  Serial.println("Forward");
+void muovi(String direzione) {
+  if (direzione == "avanti") {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
+    analogWrite(ENA, 200);
+    analogWrite(ENB, 200);
+  } else if (direzione == "destra") {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, LOW);
+    digitalWrite(IN4, LOW);
+    analogWrite(ENA, 200);
+    analogWrite(ENB, 0);
+  } else if (direzione == "sinistra") {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
+    analogWrite(ENA, 0);
+    analogWrite(ENB, 200);
+  }
 }
 
-void back() {
-  analogWrite(ENA, 100);
-  analogWrite(ENB, 100);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-  Serial.println("Back");
+void muovi1(String direzione) {
+  if (direzione == "avanti") {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
+    analogWrite(ENA, 100);
+    analogWrite(ENB, 100);
+  } else if (direzione == "destra") {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, LOW);
+    digitalWrite(IN4, LOW);
+    analogWrite(ENA, 100);
+    analogWrite(ENB, 0);
+  } else if (direzione == "sinistra") {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
+    analogWrite(ENA, 0);
+    analogWrite(ENB, 100);
+  }
 }
 
-void left() {
-  analogWrite(ENA, carSpeed);
-  analogWrite(ENB, carSpeed2);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW); 
-  Serial.println("left");
+void ferma() {
+  analogWrite(ENA, 0);
+  analogWrite(ENB, 0);
 }
-
-void right() {
-  analogWrite(ENA, carSpeed);
-  analogWrite(ENB, carSpeed2);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, LOW);
-  Serial.println("right");
-}
-
-void stop() {
-  analogWrite(ENA, carSpeed);
-  analogWrite(ENB, carSpeed2);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);
-}  
 
 void setup() {
-  Serial.begin(115200); 
-  pixy.init();  
+  Serial.begin(9600);
+  pixy.init();
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
+  pinMode(ENA, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
-  pinMode(ENA, OUTPUT);
   pinMode(ENB, OUTPUT);
-} 
-
-void objectFollowing() {
-  pixy.ccc.getBlocks();  
-
-  signature = pixy.ccc.blocks[0].m_signature;    //prende la signature della pixycam
-
-  if((signature == 1))
-  {
-    int x, width;
-    if (pixy.ccc.numBlocks) {
-        x = pixy.ccc.blocks[0].m_x;
-        width = pixy.ccc.blocks[0].m_width;
-        
-     if (x < 85) left();
-     else if (x > 235) right();
-     else if (width < 150) forward();
-     else  back();
-     
-//else  stop();
-  } else
-    forward();
-}
 }
 
 void loop() {
-  objectFollowing();
-}
+  ferma();
+  pixy.ccc.getBlocks();
 
-  
+  if (pixy.ccc.numBlocks) {
+    int x = pixy.ccc.blocks[0].m_x;
+    int altezza = pixy.ccc.blocks[0].m_height;
+
+    if (altezza > 160) {
+      Serial.println("Sto per sbattere Mbare, Fermi tutti");
+      ferma();
+    } else if (altezza > 100) {
+      Serial.println("Troppo vicino mbare, prendiamola con calma");
+      if (x < 100) {
+        Serial.println("Zombie a sinistra");
+        muovi1("sinistra");
+      } else if (x > 216) {
+        Serial.println("Zombie a destra");
+        muovi1("destra");
+      } else {
+        Serial.println("Zombie al centro");
+        muovi1("avanti");
+      }
+    } else {
+      if (x < 100) {
+        Serial.println("Zombie a sinistra");
+        muovi("sinistra");
+      } else if (x > 216) {
+        Serial.println("Zombie a destra");
+        muovi("destra");
+      } else {
+        Serial.println("Zombie al centro");
+        muovi("avanti");
+      }
+    }
+
+    delay(200);
+  }
+}
